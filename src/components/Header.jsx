@@ -31,10 +31,20 @@ export default function ButtonAppBar(props) {
             color="inherit"
             target="_blank"
             rel="noopener noreferrer"
-            href="https://github.com/Eretic0/sine-requie-creapg"
+            href="https://github.com/michele-mogul/sine-requie-creapg"
             startIcon={<GitHubIcon />}
           >
             GitHub
+          </Button>
+          <Button
+            variant="outlined"
+            color="inherit"
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/Eretic0/sine-requie-creapg"
+            startIcon={<GitHubIcon />}
+          >
+            Original Github Project
           </Button>
         </Toolbar>
       </AppBar>
