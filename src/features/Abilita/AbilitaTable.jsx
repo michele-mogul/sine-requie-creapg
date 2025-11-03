@@ -1,4 +1,5 @@
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import InputLabel from "@mui/material/InputLabel";
@@ -39,6 +40,13 @@ const AbilitaTable = ({
   const { puntiAbilitaEta, gradoMassimoEta } = useSelector(
     (state) => state.eta
   );
+
+  const getNumericGrade = (grade) =>
+    typeof grade === "number"
+      ? grade
+      : Number.isFinite(Number(grade))
+      ? Number(grade)
+      : null;
 
   const getVS = (ab) => {
     if (ab.caratteristicaRef != null) {
@@ -124,14 +132,39 @@ const AbilitaTable = ({
   };
 
   const handleUpdateGradoAbilita = (ability) => {
-    let abilityNew = null;
     const abilitySto = abilita.find((ab) => ab.id === ability.id);
-    if (abilitySto.grado < gradoMassimoEta && puntiAbilitaEta > 0) {
-      abilityNew = { ...abilitySto };
-      abilityNew.grado += 1;
+    const currentGrade = getNumericGrade(abilitySto.grado) ?? 0;
+    if (
+      currentGrade !== null &&
+      currentGrade < gradoMassimoEta &&
+      puntiAbilitaEta > 0
+    ) {
+      const abilityNew = {
+        ...abilitySto,
+        grado: currentGrade + 1,
+        gradoBase:
+          abilitySto.gradoBase !== undefined
+            ? abilitySto.gradoBase
+            : currentGrade,
+      };
       dispatch(updateAbilita(abilityNew));
-      let puntiAbilita = puntiAbilitaEta - 1;
-      dispatch(setPuntiAbilitaEta(puntiAbilita));
+      dispatch(setPuntiAbilitaEta(puntiAbilitaEta - 1));
+      dispatch(setAbilitaStoricoProfessione());
+    }
+  };
+
+  const handleDecreaseGradoAbilita = (ability) => {
+    const abilitySto = abilita.find((ab) => ab.id === ability.id);
+    const currentGrade = getNumericGrade(abilitySto.grado ?? 0);
+    const baseGrade = getNumericGrade(abilitySto.gradoBase ?? 0);
+    if (
+      currentGrade !== null &&
+      baseGrade !== null &&
+      currentGrade > baseGrade
+    ) {
+      const abilityNew = { ...abilitySto, grado: currentGrade - 1 };
+      dispatch(updateAbilita(abilityNew));
+      dispatch(setPuntiAbilitaEta(puntiAbilitaEta + 1));
       dispatch(setAbilitaStoricoProfessione());
     }
   };
@@ -167,22 +200,38 @@ const AbilitaTable = ({
   };
 
   const editGrado = (ability) => {
+    const numericGrade = getNumericGrade(ability.grado);
+    const baseGrade = getNumericGrade(ability.gradoBase ?? 0);
     if (!listBonusAbilita) {
       return (
         <>
           {ability.grado}&nbsp;
           {getDescIfPregioOrDifetto(ability.id, pregi, difetti)}
-          <IconButton
-            edge="end"
-            onClick={() => handleUpdateGradoAbilita(ability)}
-          >
-            <AddCircleOutlineIcon />
-          </IconButton>
+          {numericGrade !== null && (
+            <>
+              <IconButton
+                edge="end"
+                onClick={() => handleDecreaseGradoAbilita(ability)}
+                disabled={numericGrade <= (baseGrade ?? 0)}
+              >
+                <RemoveCircleOutlineIcon />
+              </IconButton>
+              <IconButton
+                edge="end"
+                onClick={() => handleUpdateGradoAbilita(ability)}
+                disabled={puntiAbilitaEta <= 0 || numericGrade >= gradoMassimoEta}
+              >
+                <AddCircleOutlineIcon />
+              </IconButton>
+            </>
+          )}
         </>
       );
-    } else if (
+    }
+
+    if (
       ability.prestampata &&
-      "1/2" === ability.grado &&
+      ability.grado === "1/2" &&
       !ability.professione &&
       !ability.passato &&
       listBonusAbilita.length > 0
@@ -210,6 +259,7 @@ const AbilitaTable = ({
         </>
       );
     }
+
     return (
       <>
         {ability.grado}&nbsp;

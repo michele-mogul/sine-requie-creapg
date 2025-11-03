@@ -43,19 +43,15 @@ const ProfessionePaper = ({
     return test;
   };
 
-  const isAbilitaSceltaPresent = (idList) => {
-    let test = false;
-    const select = professioneAbilitaScelte.find((t) => t.idList === idList);
-    if (select) {
-      test = true;
-    }
-    return test;
-  };
+  const isAbilitaSceltaSelezionata = (abilitaId, idList) =>
+    professioneAbilitaScelte.some(
+      (t) => t.idAbilita === abilitaId && t.idList !== idList
+    );
 
-  const isMaxAbilitaSceltaLibera = () =>
-    professioneAbilitaScelteLibere.length === professione.numeroAbilitaLibera;
-
-  const getAbilitaSceltaLibera = (listAbilitaSceltaLibera) => {
+  const getAbilitaSceltaLibera = (
+    listAbilitaSceltaLibera,
+    maxAbilitaSelezionabili
+  ) => {
     return (
       <FormControl fullWidth>
         <FormLabel id="abilitascelta-radio-buttons-group-label">
@@ -81,8 +77,8 @@ const ProfessionePaper = ({
               key={ar.id}
               value={ar.id}
               disabled={
-                isAbilitaSceltaLiberaPresent(ar.id) ||
-                isMaxAbilitaSceltaLibera()
+                !isAbilitaSceltaLiberaPresent(ar.id) &&
+                professioneAbilitaScelteLibere.length >= maxAbilitaSelezionabili
               }
             >
               <Checkbox checked={isAbilitaSceltaLiberaPresent(ar.id)} />
@@ -118,11 +114,14 @@ const ProfessionePaper = ({
               }
               onChange={(event) => handleChangeAbilitaScelta(abi.idList, event)}
             >
+              <MenuItem value="">
+                <em>Nessuna</em>
+              </MenuItem>
               {abi.listAbilita.map((ar) => (
                 <MenuItem
                   key={ar.id}
                   value={ar.id}
-                  disabled={isAbilitaSceltaPresent(abi.idList)}
+                  disabled={isAbilitaSceltaSelezionata(ar.id, abi.idList)}
                 >
                   {AbilitaDb.find((a) => a.id === ar.id).nome}
                 </MenuItem>
@@ -162,7 +161,7 @@ const ProfessionePaper = ({
         <Typography gutterBottom variant="h6" component="div">
           {`Abilità a scelta: ${numeroAbilita} da selezionare`}
         </Typography>
-        {getAbilitaSceltaLibera(listAbility)}
+        {getAbilitaSceltaLibera(listAbility, numeroAbilita)}
       </>
     );
   };

@@ -1,12 +1,27 @@
 import { createSlice } from "@reduxjs/toolkit";
 import AbilitaDb from "../../db/Abilita";
 
+const enrichAbility = (ability) => ({
+  ...ability,
+  gradoBase:
+    ability.gradoBase !== undefined ? ability.gradoBase : ability.grado,
+  professioneCount:
+    ability.professioneCount !== undefined
+      ? ability.professioneCount
+      : ability.professione
+      ? 1
+      : 0,
+});
+
+const cloneAndEnrichAbilities = (abilities) =>
+  abilities.map((ability) => enrichAbility({ ...ability }));
+
+const prestampate = AbilitaDb.filter((ab) => ab.prestampata === true);
+
 const initialState = {
-  abilita: [...AbilitaDb.filter((ab) => ab.prestampata === true)],
-  abilitaStoricoTarocco: [...AbilitaDb.filter((ab) => ab.prestampata === true)],
-  abilitaStoricoProfessione: [
-    ...AbilitaDb.filter((ab) => ab.prestampata === true),
-  ],
+  abilita: cloneAndEnrichAbilities(prestampate),
+  abilitaStoricoTarocco: cloneAndEnrichAbilities(prestampate),
+  abilitaStoricoProfessione: cloneAndEnrichAbilities(prestampate),
   profiloAbilitaSelezionato: "",
   listBonusAbilita: [],
   abilitaScelteTaroccoPassato: "",
@@ -17,11 +32,11 @@ export const abilitaSlice = createSlice({
   initialState: initialState,
   reducers: {
     setAbilita: (state, { payload }) => {
-      state.abilita = payload;
+      state.abilita = cloneAndEnrichAbilities(payload);
     },
 
     addAbilita: (state, { payload }) => {
-      state.abilita.push(payload);
+      state.abilita.push(enrichAbility(payload));
     },
 
     setAbilitaScelteTaroccoPassato: (state, { payload }) => {
@@ -29,15 +44,17 @@ export const abilitaSlice = createSlice({
     },
 
     updateAbilita: (state, { payload }) => {
+      const enriched = enrichAbility(payload);
       state.abilita = state.abilita.map((ab) =>
-        ab.id === payload.id ? payload : ab
+        ab.id === enriched.id ? enriched : ab
       );
     },
 
     saveOrUpdateAbilita: (state, { payload }) => {
       const ability = state.abilita.find((t) => t.id === payload.id);
+      ability.grado = ability.grado ?? 0
       if (ability) {
-        let abilityCopy = { ...payload };
+        let abilityCopy = enrichAbility(payload);
         abilityCopy.counterFallimento += 5;
         if (abilityCopy.counterFallimento >= 9) {
           abilityCopy.grado += 1;
@@ -47,7 +64,7 @@ export const abilitaSlice = createSlice({
           ab.id === payload.id ? abilityCopy : ab
         );
       } else {
-        state.abilita.push(payload);
+        state.abilita.push(enrichAbility(payload));
       }
     },
 
@@ -66,23 +83,28 @@ export const abilitaSlice = createSlice({
     },
     resetAbilita: (state, { payload }) => {
       state.abilita = state.abilita.map((ab) =>
-        ab.id === payload.id ? AbilitaDb.find((t) => t.id === payload.id) : ab
+        ab.id === payload.id
+          ? enrichAbility({ ...AbilitaDb.find((t) => t.id === payload.id) })
+          : ab
       );
     },
     resetAllAbilita: (state) => {
-      state.abilita = [...AbilitaDb.filter((ab) => ab.prestampata === true)];
+      state.abilita = cloneAndEnrichAbilities(prestampate);
     },
 
     setAbilitaStoricoTarocco: (state) => {
-      state.abilitaStoricoTarocco = [...state.abilita];
+      state.abilitaStoricoTarocco = cloneAndEnrichAbilities(state.abilita);
     },
 
     setAbilitaStoricoProfessione: (state) => {
-      state.abilitaStoricoProfessione = [...state.abilita];
+      state.abilitaStoricoProfessione = cloneAndEnrichAbilities(state.abilita);
     },
 
     resetAbilitaScelteTaroccoPassato: (state) => {
       state.abilitaScelteTaroccoPassato = "";
+    },
+    removeAbilita: (state, { payload }) => {
+      state.abilita = state.abilita.filter((ab) => ab.id !== payload);
     },
   },
 });
@@ -101,6 +123,7 @@ export const {
   setAbilitaStoricoProfessione,
   setAbilitaScelteTaroccoPassato,
   resetAbilitaScelteTaroccoPassato,
+  removeAbilita,
 } = abilitaSlice.actions;
 
 export default abilitaSlice.reducer;

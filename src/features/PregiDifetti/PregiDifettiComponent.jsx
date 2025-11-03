@@ -39,11 +39,7 @@ import {
   setNumPregi,
 } from "../../redux/slices/pregiDifettiSlice";
 import { resetProfessione } from "../../redux/slices/professioneSlice";
-import {
-  estraiTaroccoMinore,
-  getDescNumeroCarta,
-  getDescSemeCarta,
-} from "../../utils/random";
+import { estraiTaroccoMinore } from "../../utils/random";
 
 const MODE_LIST = "list";
 const MODE_RANDOM = "random";

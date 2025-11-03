@@ -222,8 +222,8 @@ async function fillForm({
     setTextField(form, "morteA", `-${forzaFisicaVal}`);
   }
 
-  const equilibrioMentaleVal = carEquilibrioMentaleByStore(caratteristiche);
-
+  const equilibrioMentaleObj = carEquilibrioMentaleByStore(caratteristiche);
+  const equilibrioMentaleVal = equilibrioMentaleObj.valore
   if (equilibrioMentaleVal <= 3) {
     form.getCheckBox("equi3").check();
     equilibrioMentaleVal <= 2 && form.getCheckBox("equi2").check();
@@ -232,7 +232,6 @@ async function fillForm({
     const distuMent3 = disturbiMentali.find((t) => t.equilibrioMental === 3);
     const distuMent2 = disturbiMentali.find((t) => t.equilibrioMental === 2);
     const distuMent1 = disturbiMentali.find((t) => t.equilibrioMental === 1);
-
     distuMent3 &&
       setTextField(form, "disturboMentale3", distuMent3.disturbo.nome);
     distuMent2 &&

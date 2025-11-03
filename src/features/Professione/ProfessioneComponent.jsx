@@ -13,8 +13,8 @@ import AbilitaDb from "../../db/Abilita";
 import ProfessioniDb from "../../db/Professioni";
 import {
   addAbilita,
+  removeAbilita,
   resetAllAbilita,
-  saveOrUpdateAbilita,
   setAbilita,
   updateAbilita,
 } from "../../redux/slices/abilitaSlice";
@@ -30,6 +30,7 @@ import {
   resetProfessioneAbilitaScelte,
   resetProfessioneAbilitaScelteLibere,
   setProfessione,
+  setProfessioneAbilitaScelte,
   setProfessioneAbilitaScelteLibere,
   setProfessionePrecedente,
   updateProfessioneAbilitaScelta,
@@ -59,29 +60,124 @@ const ProfessioneComponent = () => {
   const { ambientazione } = useSelector((state) => state.generalita);
   const dispatch = useDispatch();
 
+  const getNumericGrade = (value, defaultValue = null) => {
+    if (typeof value === "number") {
+      return value;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : defaultValue;
+  };
+
+  const computeBaseGrade = (ability, defaultValue = 0) => {
+    const base = ability?.gradoBase;
+    const numericBase = getNumericGrade(base, null);
+    if (numericBase !== null) {
+      return numericBase;
+    }
+    const numericGrade = getNumericGrade(ability?.grado, null);
+    if (numericGrade !== null) {
+      return numericGrade;
+    }
+    return defaultValue;
+  };
+
+  const setAbilityForProfessione = (ability, existingAbility = null) => {
+    const abilityInt = existingAbility ? { ...existingAbility } : { ...ability };
+    if (!existingAbility && abilityInt.prestampata) {
+      abilityInt.counterFallimento = (abilityInt.counterFallimento ?? 0) + 5;
+    }
+    const baseGrade = abilityInt.gradoBase ?? abilityInt.grado;
+    abilityInt.gradoBase = abilityInt.gradoBase ?? baseGrade;
+    if (typeof abilityInt.grado === "number") {
+      const numericBase = computeBaseGrade(abilityInt, 0);
+      abilityInt.grado = numericBase;
+    } else {
+      abilityInt.grado = abilityInt.gradoBase;
+    }
+    abilityInt.professioneCount = (abilityInt.professioneCount ?? 0) + 1;
+    abilityInt.professione = true;
+    abilityInt.scelta = true;
+    return abilityInt;
+  };
+
+  const applyProfessionAbility = (abilityId) => {
+    if (!abilityId) {
+      return;
+    }
+    const abilityState = abilita.find((ab) => ab.id === abilityId);
+    if (abilityState) {
+      dispatch(updateAbilita(setAbilityForProfessione(abilityState, abilityState)));
+      return;
+    }
+    const abilityDb = AbilitaDb.find((ab) => ab.id === abilityId);
+    if (!abilityDb) {
+      return;
+    }
+    dispatch(addAbilita(setAbilityForProfessione(abilityDb)));
+  };
+
+  const applyProfessionAbilities = (abilityRefs = []) => {
+    abilityRefs.forEach((element) => applyProfessionAbility(element.id));
+  };
+
+  const releaseProfessionAbility = (abilityId) => {
+    if (!abilityId) {
+      return;
+    }
+    const abilityState = abilita.find((ab) => ab.id === abilityId);
+    if (!abilityState) {
+      return;
+    }
+    const currentCount = abilityState.professioneCount ?? (abilityState.professione ? 1 : 0);
+    if (currentCount > 1) {
+      dispatch(
+        updateAbilita({
+          ...abilityState,
+          professioneCount: currentCount - 1,
+          professione: true,
+        })
+      );
+      return;
+    }
+    const updated = {
+      ...abilityState,
+      professioneCount: 0,
+      professione: false,
+      scelta: abilityState.passato ? abilityState.scelta : false,
+    };
+    if (typeof abilityState.grado === "number") {
+      updated.grado = computeBaseGrade(abilityState, 0);
+    } else {
+      updated.grado = abilityState.gradoBase ?? abilityState.grado;
+    }
+    const removable =
+      !abilityState.prestampata &&
+      !abilityState.passato &&
+      !abilityState.professionePrecedente;
+    if (removable) {
+      dispatch(removeAbilita(abilityId));
+    } else {
+      dispatch(updateAbilita(updated));
+    }
+  };
+
   const handleChangeAbilitaSceltaLibera = (event) => {
     let abilitySelected = event.target.value;
 
     if (typeof abilitySelected === "string") {
       abilitySelected = abilitySelected.split(",");
     }
-    dispatch(setProfessioneAbilitaScelteLibere(abilitySelected));
+    const toAdd = abilitySelected.filter(
+      (id) => !professioneAbilitaScelteLibere.includes(id)
+    );
+    const toRemove = professioneAbilitaScelteLibere.filter(
+      (id) => !abilitySelected.includes(id)
+    );
 
-    abilitySelected.forEach((element) => {
-      let ability = abilita.find((ab) => ab.id === element);
-      if (!ability) {
-        ability = AbilitaDb.find((ab) => ab.id === element);
-        if (!ability.scelta) {
-          ability.scelta = true;
-          dispatch(addAbilita(setAbilityForProfessione(ability)));
-        }
-      } else {
-        if (!ability.scelta) {
-          ability.scelta = true;
-          dispatch(updateAbilita(setAbilityForProfessione(ability)));
-        }
-      }
-    });
+    toAdd.forEach((id) => applyProfessionAbility(id));
+    toRemove.forEach((id) => releaseProfessionAbility(id));
+
+    dispatch(setProfessioneAbilitaScelteLibere(abilitySelected));
   };
 
   const handleAmbSoviet = (prof) => {
@@ -148,63 +244,14 @@ const ProfessioneComponent = () => {
       const mainProf = ProfessioniDb.find((t) => t.id === professione.id);
 
       if (mainProf.abilitaRef.length > 0) {
-        mainProf.abilitaRef.forEach((element) => {
-          let abilitaStor = abilitaStoricoTarocco.find(
-            (t) => t.id === element.id
-          );
-          if (abilitaStor) {
-            let abiMod = { ...abilitaStor };
-            abiMod.grado = +0;
-            abiMod.professione = true;
-            dispatch(saveOrUpdateAbilita(abiMod));
-          } else {
-            abilitaStor = AbilitaDb.find((t) => t.id === element.id);
-            let abiMod = { ...abilitaStor };
-            abiMod.grado = +0;
-            abiMod.professione = true;
-            dispatch(saveOrUpdateAbilita(abiMod));
-          }
-        });
+        applyProfessionAbilities(mainProf.abilitaRef);
       }
 
-      listAbilitaByProfessione.forEach((element) => {
-        let abilitaStor = abilitaStoricoTarocco.find(
-          (t) => t.id === element.id
-        );
-        if (abilitaStor) {
-          let abiMod = { ...abilitaStor };
-          abiMod.grado = +0;
-          abiMod.professione = true;
-          dispatch(saveOrUpdateAbilita(abiMod));
-        } else {
-          abilitaStor = AbilitaDb.find((t) => t.id === element.id);
-          let abiMod = { ...abilitaStor };
-          abiMod.grado = +0;
-          abiMod.professione = true;
-          dispatch(saveOrUpdateAbilita(abiMod));
-        }
-      });
+      applyProfessionAbilities(listAbilitaByProfessione);
     } else {
       dispatch(setProfessione(prof));
-      const listAbilitaByProfessione = prof.abilitaRef;
       dispatch(setAbilita(abilitaStoricoTarocco));
-      listAbilitaByProfessione.forEach((element) => {
-        let abilitaStor = abilitaStoricoTarocco.find(
-          (t) => t.id === element.id
-        );
-        if (abilitaStor) {
-          let abiMod = { ...abilitaStor };
-          abiMod.grado = +0;
-          abiMod.professione = true;
-          dispatch(saveOrUpdateAbilita(abiMod));
-        } else {
-          abilitaStor = AbilitaDb.find((t) => t.id === element.id);
-          let abiMod = { ...abilitaStor };
-          abiMod.grado = +0;
-          abiMod.professione = true;
-          dispatch(saveOrUpdateAbilita(abiMod));
-        }
-      });
+      applyProfessionAbilities(prof.abilitaRef);
     }
     handleCloseAlertDialog();
   };
@@ -237,33 +284,34 @@ const ProfessioneComponent = () => {
     return professioniFilter;
   };
 
-  const setAbilityForProfessione = (ability) => {
-    let abilityInt = { ...ability };
-    if (abilityInt.prestampata) {
-      abilityInt.counterFallimento += 5;
-    }
-    abilityInt.grado = 0;
-    abilityInt.professione = true;
-    return abilityInt;
-  };
-
   const handleChangeAbilitaScelta = (idList, event) => {
     const idAbilita = event.target.value;
+    const existing = professioneAbilitaScelte.find((t) => t.idList === idList);
+
+    if (existing) {
+      releaseProfessionAbility(existing.idAbilita);
+    }
+
+    if (!idAbilita) {
+      dispatch(
+        setProfessioneAbilitaScelte(
+          professioneAbilitaScelte.filter((t) => t.idList !== idList)
+        )
+      );
+      return;
+    }
+
+    applyProfessionAbility(idAbilita);
+
     const professioneAbilitaScelta = {
       idList,
       idAbilita,
     };
-    if (professioneAbilitaScelte.find((t) => t.idList === idList)) {
+
+    if (existing) {
       dispatch(updateProfessioneAbilitaScelta(professioneAbilitaScelta));
     } else {
       dispatch(addProfessioneAbilitaScelta(professioneAbilitaScelta));
-    }
-    let ability = abilita.find((ab) => ab.id === idAbilita);
-    if (!ability) {
-      ability = AbilitaDb.find((ab) => ab.id === idAbilita);
-      dispatch(addAbilita(setAbilityForProfessione(ability)));
-    } else {
-      dispatch(updateAbilita(setAbilityForProfessione(ability)));
     }
   };
 
@@ -288,42 +336,10 @@ const ProfessioneComponent = () => {
       const mainProf = ProfessioniDb.find((t) => t.id === professione.id);
 
       if (mainProf.abilitaRef.length > 0) {
-        mainProf.abilitaRef.forEach((element) => {
-          let abilitaStor = abilitaStoricoTarocco.find(
-            (t) => t.id === element.id
-          );
-          if (abilitaStor) {
-            let abiMod = { ...abilitaStor };
-            abiMod.grado = +0;
-            abiMod.professione = true;
-            dispatch(saveOrUpdateAbilita(abiMod));
-          } else {
-            abilitaStor = AbilitaDb.find((t) => t.id === element.id);
-            let abiMod = { ...abilitaStor };
-            abiMod.grado = +0;
-            abiMod.professione = true;
-            dispatch(saveOrUpdateAbilita(abiMod));
-          }
-        });
+        applyProfessionAbilities(mainProf.abilitaRef);
       }
 
-      listAbilitaByProfessione.forEach((element) => {
-        let abilitaStor = abilitaStoricoTarocco.find(
-          (t) => t.id === element.id
-        );
-        if (abilitaStor) {
-          let abiMod = { ...abilitaStor };
-          abiMod.grado = +0;
-          abiMod.professione = true;
-          dispatch(saveOrUpdateAbilita(abiMod));
-        } else {
-          abilitaStor = AbilitaDb.find((t) => t.id === element.id);
-          let abiMod = { ...abilitaStor };
-          abiMod.grado = +0;
-          abiMod.professione = true;
-          dispatch(saveOrUpdateAbilita(abiMod));
-        }
-      });
+      applyProfessionAbilities(listAbilitaByProfessione);
     }
   };
 
@@ -340,25 +356,8 @@ const ProfessioneComponent = () => {
       setOpenAlertDialog(true);
     } else {
       dispatch(setProfessione(prof));
-      const listAbilitaByProfessione = prof.abilitaRef;
       dispatch(setAbilita(abilitaStoricoTarocco));
-      listAbilitaByProfessione.forEach((element) => {
-        let abilitaStor = abilitaStoricoTarocco.find(
-          (t) => t.id === element.id
-        );
-        if (abilitaStor) {
-          let abiMod = { ...abilitaStor };
-          abiMod.grado = +0;
-          abiMod.professione = true;
-          dispatch(saveOrUpdateAbilita(abiMod));
-        } else {
-          abilitaStor = AbilitaDb.find((t) => t.id === element.id);
-          let abiMod = { ...abilitaStor };
-          abiMod.grado = +0;
-          abiMod.professione = true;
-          dispatch(saveOrUpdateAbilita(abiMod));
-        }
-      });
+      applyProfessionAbilities(prof.abilitaRef);
     }
   };
 
