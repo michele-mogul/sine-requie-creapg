@@ -6,7 +6,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/Eretic0/sine-requie-creapg">
+  <a href="https://github.com/michele-mogul/sine-requie-creapg">
     <img src="public/favicon.ico" alt="Logo" width="80" height="80">
   </a>
 
@@ -15,16 +15,18 @@
   <p align="center">
     Una web application per la creazione di Personaggi di Sine Requie Anno XIII Seconda Edizione
     <br />
+    Repository mantenuto da Michele Mogul e basato sul lavoro originale di <a href="https://github.com/Eretic0/sine-requie-creapg">Eretic0</a>.
+    <br />
     <b>Importante!</b>
     <br />
     Per una migliore esperienza consigliamo di utilizzare browser come Google Chrome e Mozilla Firefox per accedere all'applicativo e per la visualizzazione della Scheda del Personaggio consigliamo di utilizzare Adobe Acrobat.
     <br />
-    <a href="https://eretic0.github.io/sine-requie-creapg/"><strong>Vai all'applicazione »</strong></a>
+    <a href="https://michele-mogul.github.io/sine-requie-creapg/"><strong>Vai all'applicazione »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/Eretic0/sine-requie-creapg/issues">Report Bug</a>
+    <a href="https://github.com/michele-mogul/sine-requie-creapg/issues">Report Bug</a>
     ·
-    <a href="https://github.com/Eretic0/sine-requie-creapg/issues">Richiesta Feature</a>
+    <a href="https://github.com/michele-mogul/sine-requie-creapg/issues">Richiesta Feature</a>
   </p>
 </div>
 
@@ -63,6 +65,7 @@
 Il progetto permette la creazione di un personaggio per il gioco di ruolo Sine Requie Anno XIII con il regolamento per la seconda edizione.
 La Web Application disponibile online è accessibile tramite browser (sono consigliati browser moderni come Google Chrome o Mozilla Firefox) e permette la possibilità di stampare una scheda del personaggio creato.
 Al momento saranno disponibili le professioni del Manuale Base ma l'idea è poco alla volta espandere con tutti i manuali successivi.
+Questo repository è un fork che mantiene e adatta il progetto originale di Eretic0 per la community italiana.
 
 <p align="right">(<a href="#readme-top">ritorna all'inizio</a>)</p>
 
@@ -89,7 +92,7 @@ Consiglio di avere installato i seguenti software.
 
 1. Clona il repository
    ```sh
-   git clone https://github.com/Eretic0/sine-requie-creapg.git
+   git clone https://github.com/michele-mogul/sine-requie-creapg.git
    ```
 2. Installa i pacchetti NPM
    ```sh
@@ -145,7 +148,7 @@ Compila le diverse sezioni presenti nell'applicativo con i dati richiesti per cr
 - [ ] Implementazione regole Propeudicità
 - [x] Stampa scheda personaggio
 
-Vedere presso [open issues](https://github.com/Eretic0/sine-requie-creapg/issues) per una lista completa delle feature proposte (e problemi conosciuti).
+Consulta le [open issues](https://github.com/michele-mogul/sine-requie-creapg/issues) per una lista completa delle feature proposte (e problemi conosciuti). Per riferimenti storici puoi ancora trovare le discussioni originali su [Eretic0/sine-requie-creapg](https://github.com/Eretic0/sine-requie-creapg/issues).
 
 <p align="right">(<a href="#readme-top">ritorna all'inizio</a>)</p>
 
@@ -178,9 +181,11 @@ Distribuita con la licenza Creative Commons Attribution Non Commercial No Deriva
 
 ## Contatti
 
-Eretic0 - [Discord](https://discord.gg/UheyS5PZsx) - [YouTube](https://www.youtube.com/@GoticaArcana) - [Itch.io](https://eretic0.itch.io/)
+Michele Mogul - [GitHub](https://github.com/michele-mogul)
 
-Link al Progetto: [https://github.com/Eretic0/sine-requie-creapg](https://github.com/Eretic0/sine-requie-creapg)
+Per feedback sul progetto originale visita i canali di Eretic0 - [Discord](https://discord.gg/UheyS5PZsx) - [YouTube](https://www.youtube.com/@GoticaArcana) - [Itch.io](https://eretic0.itch.io/)
+
+Link al Progetto: [https://github.com/michele-mogul/sine-requie-creapg](https://github.com/michele-mogul/sine-requie-creapg)
 
 <p align="right">(<a href="#readme-top">ritorna all'inizio</a>)</p>
 
@@ -189,15 +194,16 @@ Link al Progetto: [https://github.com/Eretic0/sine-requie-creapg](https://github
 ## Riconoscimenti
 
 - [Sito Serpentarium](https://www.serpentarium.net)
+- Progetto originale di [Eretic0](https://github.com/Eretic0/sine-requie-creapg)
 
 <p align="right">(<a href="#readme-top">ritorna all'inizio</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[stars-shield]: https://img.shields.io/github/stars/Eretic0/sine-requie-creapg.svg?style=for-the-badge
-[stars-url]: https://github.com/Eretic0/sine-requie-creapg/stargazers
-[issues-shield]: https://img.shields.io/github/issues/Eretic0/sine-requie-creapg.svg?style=for-the-badge
-[issues-url]: https://github.com/Eretic0/sine-requie-creapg/issues
+[stars-shield]: https://img.shields.io/github/stars/michele-mogul/sine-requie-creapg.svg?style=for-the-badge
+[stars-url]: https://github.com/michele-mogul/sine-requie-creapg/stargazers
+[issues-shield]: https://img.shields.io/github/issues/michele-mogul/sine-requie-creapg.svg?style=for-the-badge
+[issues-url]: https://github.com/michele-mogul/sine-requie-creapg/issues
 [react.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
 [react-url]: https://reactjs.org/
