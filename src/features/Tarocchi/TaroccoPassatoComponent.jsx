@@ -1,6 +1,11 @@
 import Button from "@mui/material/Button";
+import FormControl from "@mui/material/FormControl";
 import Grid from "@mui/material/Grid";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
+import { useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Card from "../../components/Card";
 import IconTooltip from "../../components/IconTooltip";
@@ -23,6 +28,12 @@ function TaroccoPassato() {
   const { numeroAbilitaTaroccoPassato } = useSelector((state) => state.eta);
   const { abilitaScelteTaroccoPassato } = useSelector((state) => state.abilita);
   const dispatch = useDispatch();
+  const tarocchiOptions = useMemo(
+    () => [...TarocchiDb].sort((a, b) => a.numero - b.numero),
+    []
+  );
+  const selectedTaroccoNumero =
+    typeof taroccoPassato?.numero === "number" ? taroccoPassato.numero : "";
 
   const handleSelectAbilitaTaroccoPassato = (event) => {
     const idAbilita = event.target.value;
@@ -39,31 +50,64 @@ function TaroccoPassato() {
     }
   };
 
+  const applyTaroccoPassato = (tarocco) => {
+    if (!tarocco) {
+      return;
+    }
+    dispatch(resetAbilitaScelteTaroccoPassato());
+    dispatch(setTaroccoPassato(tarocco));
+    const listAbilitaByTarocco = tarocco.abilitaRef;
+    dispatch(resetAllAbilita());
+    dispatch(resetProfessione());
+    if (numeroAbilitaTaroccoPassato === 2) {
+      listAbilitaByTarocco.forEach((element) => {
+        const ability = AbilitaDb.find((ab) => ab.id === element.id);
+        let abi = { ...ability };
+        abi.grado = +0;
+        abi.passato = true;
+        dispatch(saveOrUpdateAbilita(abi));
+      });
+    }
+    dispatch(setAbilitaStoricoTarocco());
+  };
+
   const handleRandomTaroccoPassato = () => {
     const number = generateRandomNumer(21, 0);
     const tarocco = TarocchiDb.find((t) => t.numero === number);
-    if (tarocco) {
-      dispatch(resetAbilitaScelteTaroccoPassato());
-      dispatch(setTaroccoPassato(tarocco));
-      const listAbilitaByTarocco = tarocco.abilitaRef;
-      dispatch(resetAllAbilita());
-      dispatch(resetProfessione());
-      if (numeroAbilitaTaroccoPassato === 2) {
-        listAbilitaByTarocco.forEach((element) => {
-          const ability = AbilitaDb.find((ab) => ab.id === element.id);
-          let abi = { ...ability };
-          abi.grado = +0;
-          abi.passato = true;
-          dispatch(saveOrUpdateAbilita(abi));
-        });
-      }
-      dispatch(setAbilitaStoricoTarocco());
+    applyTaroccoPassato(tarocco);
+  };
+
+  const handleSelectTaroccoPassato = (event) => {
+    const numero = Number(event.target.value);
+    if (Number.isNaN(numero)) {
+      return;
     }
+    const tarocco = tarocchiOptions.find((t) => t.numero === numero);
+    applyTaroccoPassato(tarocco);
   };
 
   return (
     <Card headerText="Tarocco Passato">
       <Stack spacing={2} direction="row">
+        <FormControl size="small" sx={{ minWidth: 220 }}>
+          <InputLabel id="tarocco-passato-select-label">Seleziona</InputLabel>
+          <Select
+            labelId="tarocco-passato-select-label"
+            id="tarocco-passato-select"
+            value={selectedTaroccoNumero}
+            label="Seleziona"
+            onChange={handleSelectTaroccoPassato}
+          >
+            <MenuItem value="" disabled>
+              <em>Seleziona tarocco</em>
+            </MenuItem>
+            {tarocchiOptions.map((tarocco) => (
+              <MenuItem key={tarocco.id} value={tarocco.numero}>
+                {tarocco.numero} - {tarocco.nome}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <>
           <Button
             size="small"
